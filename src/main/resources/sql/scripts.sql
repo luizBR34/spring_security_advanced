@@ -161,3 +161,29 @@ CREATE TABLE `contact_messages` (
   `create_dt` date DEFAULT NULL,
   PRIMARY KEY (`contact_id`)
 );
+
+CREATE TABLE `authorities` (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    customer_id BIGINT NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    PRIMARY KEY (id),
+    KEY idx_customer_id (customer_id),
+    CONSTRAINT fk_authorities_customer
+        FOREIGN KEY (customer_id)
+        REFERENCES `customer` (customer_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+
+INSERT INTO `authorities` (`customer_id`, `name`)
+VALUES (1, 'VIEWACCOUNT');
+
+INSERT INTO `authorities` (`customer_id`, `name`)
+VALUES (1, 'VIEWCARDS');
+
+INSERT INTO `authorities` (`customer_id`, `name`)
+VALUES (1, 'VIEWLOANS');
+
+INSERT INTO `authorities` (`customer_id`, `name`)
+VALUES (1, 'VIEWBALANCE');
