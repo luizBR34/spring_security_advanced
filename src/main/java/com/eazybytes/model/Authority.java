@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Entity
 @Getter @Setter
-@Table(name = "authorities")
+@Table(name="authorities")
 public class Authority {
 
     @Id
@@ -16,6 +16,7 @@ public class Authority {
     private String name;
 
     @ManyToOne
-    @JoinColumn(name = "customer_id")
+    @JoinColumn(name="customer_id")
     private Customer customer;
+
 }

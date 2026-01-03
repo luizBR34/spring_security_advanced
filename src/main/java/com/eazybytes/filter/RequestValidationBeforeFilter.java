@@ -1,6 +1,6 @@
 package com.eazybytes.filter;
 
-import com.eazybytes.utils.EmailValidator;
+
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -10,42 +10,47 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 public class RequestValidationBeforeFilter implements Filter {
-    @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
-            throws IOException, ServletException {
 
-        HttpServletRequest req = (HttpServletRequest) servletRequest;
-        HttpServletResponse res = (HttpServletResponse) servletResponse;
+
+    /**
+     * @param request  The request to process
+     * @param response The response associated with the request
+     * @param chain    Provides access to the next filter in the chain for this filter to pass the request and response
+     *                 to for further processing
+     * @throws IOException
+     * @throws ServletException
+     */
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse res = (HttpServletResponse) response;
         String header = req.getHeader(HttpHeaders.AUTHORIZATION);
-        if (header != null) {
+        if(null != header) {
             header = header.trim();
-            if (StringUtils.startsWithIgnoreCase(header, "Basic ")) {
+            if(StringUtils.startsWithIgnoreCase(header, "Basic ")) {
                 byte[] base64Token = header.substring(6).getBytes(StandardCharsets.UTF_8);
                 byte[] decoded;
                 try {
-                    decoded = java.util.Base64.getDecoder().decode(base64Token);
-                    String token = new String(decoded, StandardCharsets.UTF_8); //username:password
-                    String[] values = token.split(":");
-                    if (values.length == 2) {
-                        String username = values[0];
-                        String password = values[1];
-                        if (EmailValidator.isEmailValido(username) && password.length() >= 8) {
-                            filterChain.doFilter(servletRequest, servletResponse);
-                        } else {
-                            res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                            throw new BadCredentialsException("Invalid username or password");
-                        }
-                    } else {
-                        res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        throw new BadCredentialsException("Missing username or password");
+                    decoded = Base64.getDecoder().decode(base64Token);
+                    String token = new String(decoded, StandardCharsets.UTF_8); // un:pwd
+                    int delim = token.indexOf(":");
+                    if(delim== -1) {
+                        throw new BadCredentialsException("Invalid basic authentication token");
                     }
-                } catch (IllegalArgumentException ex) {
-                    res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    throw new BadCredentialsException("Invalid basic authentication token");
+                    String email = token.substring(0,delim);
+                    if(email.toLowerCase().contains("test")) {
+                        res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        return;
+                    }
+                } catch (IllegalArgumentException exception) {
+                    throw new BadCredentialsException("Failed to decode basic authentication token");
                 }
             }
         }
+        chain.doFilter(request, response);
     }
 }
